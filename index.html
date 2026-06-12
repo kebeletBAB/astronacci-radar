@@ -799,7 +799,7 @@
 const GAS_URL    = 'https://script.google.com/macros/s/AKfycbxGFDYA6YuRtcQ3jB-sdl5gj1s5iptC8txNDZT8mZ-pnR6Mvz7VOZkX7VruIZ8ZShJS/exec';
 const CLIENT_ID  = '263087807773-rmq9r04itbu5tts0s782t2cnp71kbo81.apps.googleusercontent.com';
 // Whitelist email — hanya email ini yang boleh masuk
-const ALLOWED_EMAILS = []; // Kosongkan = semua Google account bisa masuk. Isi email kamu untuk restrict.
+const ALLOWED_EMAILS = []; // Kosongkan = semua bisa masuk. Isi email untuk restrict: ['email@gmail.com']
 
 // ===== STATE =====
 let allData      = [];
@@ -809,30 +809,37 @@ let moonData     = null;
 
 // ===== GOOGLE AUTH =====
 function signInWithGoogle() {
-  google.accounts.id.initialize({
+  // Popup OAuth2 — lebih reliable di GitHub Pages vs FedCM
+  const client = google.accounts.oauth2.initTokenClient({
     client_id: CLIENT_ID,
-    callback:  handleCredential,
-    auto_select: false
+    scope: 'email profile openid',
+    callback: handleTokenResponse
   });
-  google.accounts.id.prompt();
+  client.requestAccessToken();
 }
 
-function handleCredential(response) {
-  const payload = parseJwt(response.credential);
-  if (ALLOWED_EMAILS.length > 0 && !ALLOWED_EMAILS.includes(payload.email)) {
-    showToast('❌ Akses ditolak — email tidak terdaftar');
+async function handleTokenResponse(tokenResponse) {
+  if (tokenResponse.error) {
+    showToast('❌ Login gagal: ' + tokenResponse.error);
     return;
   }
-  currentUser = payload;
-  document.getElementById('userAvatar').src = payload.picture || '';
-  document.getElementById('loginScreen').style.display = 'none';
-  document.getElementById('mainApp').style.display = 'block';
-  loadData();
-}
-
-function parseJwt(token) {
-  const base64 = token.split('.')[1].replace(/-/g,'+').replace(/_/g,'/');
-  return JSON.parse(atob(base64));
+  try {
+    const res  = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+      headers: { Authorization: 'Bearer ' + tokenResponse.access_token }
+    });
+    const user = await res.json();
+    if (ALLOWED_EMAILS.length > 0 && !ALLOWED_EMAILS.includes(user.email)) {
+      showToast('❌ Akses ditolak — email tidak terdaftar');
+      return;
+    }
+    currentUser = user;
+    document.getElementById('userAvatar').src = user.picture || '';
+    document.getElementById('loginScreen').style.display = 'none';
+    document.getElementById('mainApp').style.display = 'block';
+    loadData();
+  } catch(e) {
+    showToast('❌ Gagal ambil info user');
+  }
 }
 
 function signOut() {
@@ -840,7 +847,7 @@ function signOut() {
   currentUser = null;
   document.getElementById('loginScreen').style.display = 'flex';
   document.getElementById('mainApp').style.display = 'none';
-  google.accounts.id.disableAutoSelect();
+  google.accounts.oauth2.revoke(currentUser?.access_token || '', () => {});
 }
 
 // ===== DATA =====
@@ -1028,12 +1035,7 @@ function showToast(msg) {
 
 // ===== INIT =====
 window.onload = function() {
-  google.accounts.id.initialize({
-    client_id: CLIENT_ID,
-    callback:  handleCredential,
-    auto_select: true
-  });
-  google.accounts.id.prompt();
+  // Auth dihandle saat tombol diklik — tidak perlu auto prompt
 };
 </script>
 </body>
