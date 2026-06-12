@@ -1,0 +1,1040 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Astronacci Radar</title>
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500;600;700&display=swap');
+
+  :root {
+    --bg:      #060a0f;
+    --bg2:     #0b1018;
+    --bg3:     #111822;
+    --border:  #1a2436;
+    --gold:    #c9a84c;
+    --gold2:   #e8c97a;
+    --green:   #2ecc8a;
+    --red:     #e05c6a;
+    --blue:    #4a9eff;
+    --purple:  #9b87f5;
+    --text:    #e2e8f4;
+    --muted:   #5a6a85;
+    --prime:   #2ecc8a;
+    --konfirm: #4a9eff;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+  html, body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ===== LOGIN SCREEN ===== */
+  #loginScreen {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    background: radial-gradient(ellipse at 50% 0%, rgba(201,168,76,0.08) 0%, transparent 60%);
+  }
+
+  .login-logo {
+    width: 64px;
+    height: 64px;
+    background: linear-gradient(135deg, var(--gold), var(--gold2));
+    border-radius: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 28px;
+    margin-bottom: 20px;
+    box-shadow: 0 0 40px rgba(201,168,76,0.3);
+  }
+
+  .login-title {
+    font-size: 28px;
+    font-weight: 700;
+    background: linear-gradient(135deg, var(--gold), var(--gold2));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    letter-spacing: 0.1em;
+    margin-bottom: 6px;
+  }
+
+  .login-sub {
+    font-size: 13px;
+    color: var(--muted);
+    font-family: 'DM Mono', monospace;
+    letter-spacing: 0.08em;
+    margin-bottom: 40px;
+  }
+
+  .login-card {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 28px 24px;
+    width: 100%;
+    max-width: 360px;
+    text-align: center;
+  }
+
+  .login-desc {
+    font-size: 14px;
+    color: var(--muted);
+    line-height: 1.6;
+    margin-bottom: 24px;
+  }
+
+  #googleSignIn {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    background: white;
+    color: #1a1a1a;
+    border: none;
+    border-radius: 10px;
+    padding: 13px 20px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: opacity 0.2s;
+  }
+
+  #googleSignIn:hover { opacity: 0.92; }
+  #googleSignIn img { width: 20px; height: 20px; }
+
+  .login-note {
+    font-size: 11px;
+    color: var(--muted);
+    margin-top: 16px;
+    line-height: 1.5;
+  }
+
+  /* ===== MAIN APP ===== */
+  #mainApp { display: none; min-height: 100vh; }
+
+  /* HEADER */
+  .app-header {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: rgba(6,10,15,0.92);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border);
+    padding: 12px 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .app-logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .app-logo-icon {
+    width: 32px;
+    height: 32px;
+    background: linear-gradient(135deg, var(--gold), var(--gold2));
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 15px;
+    flex-shrink: 0;
+  }
+
+  .app-logo-text {
+    font-size: 16px;
+    font-weight: 700;
+    background: linear-gradient(135deg, var(--gold), var(--gold2));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    letter-spacing: 0.06em;
+  }
+
+  .app-logo-sub {
+    font-size: 10px;
+    color: var(--muted);
+    font-family: 'DM Mono', monospace;
+    letter-spacing: 0.08em;
+  }
+
+  .header-right {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .btn-refresh {
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text);
+    padding: 7px 12px;
+    font-size: 13px;
+    cursor: pointer;
+    font-family: 'DM Sans', sans-serif;
+    transition: border-color 0.2s;
+  }
+
+  .btn-refresh:hover { border-color: var(--gold); }
+  .btn-refresh:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  .user-avatar {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    border: 1px solid var(--border);
+    cursor: pointer;
+    object-fit: cover;
+  }
+
+  /* CONTENT */
+  .app-content { padding: 16px; max-width: 640px; margin: 0 auto; }
+
+  /* MOON BANNER */
+  .moon-banner {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 14px 16px;
+    margin-bottom: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+  }
+
+  .moon-left { display: flex; align-items: center; gap: 12px; }
+
+  .moon-icon-big {
+    font-size: 32px;
+    line-height: 1;
+    flex-shrink: 0;
+  }
+
+  .moon-fase {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text);
+  }
+
+  .moon-desc {
+    font-size: 12px;
+    color: var(--muted);
+    margin-top: 2px;
+    line-height: 1.4;
+  }
+
+  .moon-window {
+    padding: 5px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+
+  .window-entry { background: rgba(46,204,138,0.15); color: var(--green); border: 1px solid rgba(46,204,138,0.3); }
+  .window-watch { background: rgba(201,168,76,0.15); color: var(--gold); border: 1px solid rgba(201,168,76,0.3); }
+  .window-wait  { background: rgba(224,92,106,0.15); color: var(--red); border: 1px solid rgba(224,92,106,0.3); }
+
+  /* STATS ROW */
+  .stats-row {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+    margin-bottom: 14px;
+  }
+
+  .stat-card {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 12px 10px;
+    text-align: center;
+  }
+
+  .stat-num {
+    font-size: 22px;
+    font-weight: 700;
+    font-family: 'DM Mono', monospace;
+    line-height: 1;
+    margin-bottom: 4px;
+  }
+
+  .stat-label {
+    font-size: 10px;
+    color: var(--muted);
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+
+  .stat-prime    { color: var(--prime); }
+  .stat-konfirm  { color: var(--konfirm); }
+  .stat-total    { color: var(--gold); }
+  .stat-tanggal  { color: var(--purple); }
+
+  /* SECTION TITLE */
+  .section-title {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--muted);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .section-title::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  /* FILTER PILLS */
+  .filter-row {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 12px;
+    overflow-x: auto;
+    padding-bottom: 2px;
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  .filter-row::-webkit-scrollbar { display: none; }
+
+  .pill {
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    border: 1px solid var(--border);
+    background: var(--bg2);
+    color: var(--muted);
+    white-space: nowrap;
+    transition: all 0.15s;
+  }
+
+  .pill.active-prime    { background: rgba(46,204,138,0.15); color: var(--prime); border-color: rgba(46,204,138,0.4); }
+  .pill.active-konfirm  { background: rgba(74,158,255,0.15); color: var(--blue); border-color: rgba(74,158,255,0.4); }
+  .pill.active-all      { background: rgba(201,168,76,0.15); color: var(--gold); border-color: rgba(201,168,76,0.4); }
+
+  /* KANDIDAT CARDS */
+  .kandidat-list { display: flex; flex-direction: column; gap: 8px; }
+
+  .kandidat-card {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 14px;
+    cursor: pointer;
+    transition: border-color 0.15s;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .kandidat-card::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 3px;
+    border-radius: 3px 0 0 3px;
+  }
+
+  .kandidat-card.prime::before   { background: var(--prime); }
+  .kandidat-card.konfirm::before { background: var(--blue); }
+  .kandidat-card:hover { border-color: var(--gold); }
+
+  .card-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 10px;
+  }
+
+  .card-ticker {
+    font-size: 18px;
+    font-weight: 700;
+    font-family: 'DM Mono', monospace;
+    color: var(--text);
+    letter-spacing: 0.04em;
+  }
+
+  .card-sheet {
+    font-size: 10px;
+    color: var(--muted);
+    margin-top: 1px;
+  }
+
+  .card-badge {
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+  }
+
+  .badge-prime  { background: rgba(46,204,138,0.15); color: var(--prime); }
+  .badge-konfirm { background: rgba(74,158,255,0.15); color: var(--blue); }
+
+  .card-metrics {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+  }
+
+  .metric {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .metric-label {
+    font-size: 10px;
+    color: var(--muted);
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+
+  .metric-value {
+    font-size: 13px;
+    font-weight: 600;
+    font-family: 'DM Mono', monospace;
+    color: var(--text);
+  }
+
+  .metric-value.highlight { color: var(--gold); }
+
+  .card-bottom {
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .score-bar-wrap { flex: 1; margin-right: 12px; }
+
+  .score-bar-track {
+    height: 4px;
+    background: var(--bg3);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+
+  .score-bar-fill {
+    height: 100%;
+    border-radius: 2px;
+    background: linear-gradient(90deg, var(--gold), var(--gold2));
+  }
+
+  .score-text {
+    font-size: 11px;
+    color: var(--muted);
+    font-family: 'DM Mono', monospace;
+    margin-top: 3px;
+  }
+
+  .fib-tag {
+    padding: 3px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 700;
+    font-family: 'DM Mono', monospace;
+    background: rgba(201,168,76,0.1);
+    color: var(--gold);
+    border: 1px solid rgba(201,168,76,0.2);
+  }
+
+  /* DETAIL MODAL */
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.7);
+    z-index: 200;
+    display: none;
+    align-items: flex-end;
+    backdrop-filter: blur(4px);
+  }
+
+  .modal-overlay.show { display: flex; }
+
+  .modal-sheet {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 20px 20px 0 0;
+    padding: 20px 16px 40px;
+    width: 100%;
+    max-width: 640px;
+    margin: 0 auto;
+    max-height: 85vh;
+    overflow-y: auto;
+    animation: slideUp 0.25s ease;
+  }
+
+  @keyframes slideUp {
+    from { transform: translateY(100%); }
+    to   { transform: translateY(0); }
+  }
+
+  .modal-handle {
+    width: 40px;
+    height: 4px;
+    background: var(--border);
+    border-radius: 2px;
+    margin: 0 auto 20px;
+  }
+
+  .modal-ticker {
+    font-size: 28px;
+    font-weight: 700;
+    font-family: 'DM Mono', monospace;
+    color: var(--text);
+    margin-bottom: 4px;
+  }
+
+  .modal-sheet-name {
+    font-size: 12px;
+    color: var(--muted);
+    margin-bottom: 20px;
+  }
+
+  .modal-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 16px;
+  }
+
+  .modal-item {
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 12px;
+  }
+
+  .modal-item-label {
+    font-size: 10px;
+    color: var(--muted);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-bottom: 4px;
+  }
+
+  .modal-item-value {
+    font-size: 15px;
+    font-weight: 600;
+    font-family: 'DM Mono', monospace;
+    color: var(--text);
+  }
+
+  .modal-item-value.gold { color: var(--gold); }
+  .modal-item-value.green { color: var(--green); }
+  .modal-item-value.blue { color: var(--blue); }
+
+  .modal-ringkasan {
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px;
+    font-size: 13px;
+    color: var(--muted);
+    line-height: 1.7;
+    margin-bottom: 16px;
+  }
+
+  .modal-close {
+    width: 100%;
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    color: var(--text);
+    padding: 13px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: border-color 0.2s;
+  }
+
+  .modal-close:hover { border-color: var(--gold); }
+
+  /* LOADING */
+  .loading-wrap {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 60px 20px;
+    gap: 16px;
+  }
+
+  .spinner {
+    width: 32px;
+    height: 32px;
+    border: 2px solid var(--border);
+    border-top-color: var(--gold);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .loading-text {
+    font-size: 13px;
+    color: var(--muted);
+    font-family: 'DM Mono', monospace;
+  }
+
+  /* EMPTY STATE */
+  .empty-state {
+    text-align: center;
+    padding: 60px 20px;
+  }
+
+  .empty-icon { font-size: 40px; margin-bottom: 12px; }
+  .empty-title { font-size: 16px; font-weight: 600; margin-bottom: 6px; }
+  .empty-desc { font-size: 13px; color: var(--muted); line-height: 1.5; }
+
+  /* TOAST */
+  .toast {
+    position: fixed;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%) translateY(80px);
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 10px 18px;
+    font-size: 13px;
+    color: var(--text);
+    z-index: 300;
+    transition: transform 0.3s ease;
+    white-space: nowrap;
+  }
+
+  .toast.show { transform: translateX(-50%) translateY(0); }
+
+  /* RESPONSIVE */
+  @media (max-width: 380px) {
+    .stats-row { grid-template-columns: repeat(2, 1fr); }
+    .card-metrics { grid-template-columns: repeat(2, 1fr); }
+  }
+</style>
+</head>
+<body>
+
+<!-- LOGIN SCREEN -->
+<div id="loginScreen">
+  <div class="login-logo">⭐</div>
+  <div class="login-title">ASTRONACCI</div>
+  <div class="login-sub">RADAR IDX</div>
+
+  <div class="login-card">
+    <div class="login-desc">
+      Dashboard Astronacci untuk memantau kandidat saham IDX berdasarkan timing fase bulan dan level Fibonacci.
+    </div>
+    <button id="googleSignIn" onclick="signInWithGoogle()">
+      <img src="https://www.google.com/favicon.ico" alt="G">
+      Masuk dengan Google
+    </button>
+    <div class="login-note">Akses terbatas untuk pengguna terdaftar saja.</div>
+  </div>
+</div>
+
+<!-- MAIN APP -->
+<div id="mainApp">
+  <header class="app-header">
+    <div class="app-logo">
+      <div class="app-logo-icon">⭐</div>
+      <div>
+        <div class="app-logo-text">ASTRONACCI</div>
+        <div class="app-logo-sub">RADAR IDX</div>
+      </div>
+    </div>
+    <div class="header-right">
+      <button class="btn-refresh" id="btnRefresh" onclick="loadData()">↻ Refresh</button>
+      <img class="user-avatar" id="userAvatar" src="" alt="U" onclick="signOut()">
+    </div>
+  </header>
+
+  <div class="app-content">
+
+    <!-- MOON BANNER -->
+    <div class="moon-banner" id="moonBanner">
+      <div class="moon-left">
+        <div class="moon-icon-big" id="moonIcon">🌙</div>
+        <div>
+          <div class="moon-fase" id="moonFase">Memuat...</div>
+          <div class="moon-desc" id="moonDesc">—</div>
+        </div>
+      </div>
+      <div class="moon-window" id="moonWindow">—</div>
+    </div>
+
+    <!-- STATS -->
+    <div class="stats-row">
+      <div class="stat-card">
+        <div class="stat-num stat-prime" id="statPrime">—</div>
+        <div class="stat-label">Prime</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num stat-konfirm" id="statKonfirm">—</div>
+        <div class="stat-label">Konfirm</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num stat-total" id="statTotal">—</div>
+        <div class="stat-label">Total</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num stat-tanggal" id="statTanggal" style="font-size:13px">—</div>
+        <div class="stat-label">Update</div>
+      </div>
+    </div>
+
+    <!-- KANDIDAT -->
+    <div class="section-title">Kandidat Hari Ini</div>
+
+    <div class="filter-row">
+      <div class="pill active-all" onclick="filterData('all', this)">Semua</div>
+      <div class="pill" onclick="filterData('PRIME', this)">⭐ Prime</div>
+      <div class="pill" onclick="filterData('KONFIRMASI', this)">✓ Konfirmasi</div>
+    </div>
+
+    <div id="kandidatList">
+      <div class="loading-wrap">
+        <div class="spinner"></div>
+        <div class="loading-text">Memuat data scan...</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- DETAIL MODAL -->
+<div class="modal-overlay" id="modalOverlay" onclick="closeModal(event)">
+  <div class="modal-sheet" id="modalSheet">
+    <div class="modal-handle"></div>
+    <div class="modal-ticker" id="modalTicker">—</div>
+    <div class="modal-sheet-name" id="modalSheetName">—</div>
+
+    <div class="modal-grid">
+      <div class="modal-item">
+        <div class="modal-item-label">Harga Close</div>
+        <div class="modal-item-value gold" id="mHarga">—</div>
+      </div>
+      <div class="modal-item">
+        <div class="modal-item-label">Astronacci Score</div>
+        <div class="modal-item-value gold" id="mSkor">—</div>
+      </div>
+      <div class="modal-item">
+        <div class="modal-item-label">Fibonacci Level</div>
+        <div class="modal-item-value" id="mFibLevel">—</div>
+      </div>
+      <div class="modal-item">
+        <div class="modal-item-label">Harga Level</div>
+        <div class="modal-item-value" id="mHargaLevel">—</div>
+      </div>
+      <div class="modal-item">
+        <div class="modal-item-label">Jarak ke Level</div>
+        <div class="modal-item-value" id="mJarak">—</div>
+      </div>
+      <div class="modal-item">
+        <div class="modal-item-label">Zona</div>
+        <div class="modal-item-value" id="mZona">—</div>
+      </div>
+      <div class="modal-item">
+        <div class="modal-item-label">Swing High</div>
+        <div class="modal-item-value" id="mSwingHigh">—</div>
+      </div>
+      <div class="modal-item">
+        <div class="modal-item-label">Swing Low</div>
+        <div class="modal-item-value" id="mSwingLow">—</div>
+      </div>
+    </div>
+
+    <div class="modal-item" style="margin-bottom:12px">
+      <div class="modal-item-label">Fase Bulan</div>
+      <div class="modal-item-value" id="mFaseBulan">—</div>
+    </div>
+
+    <div class="modal-ringkasan" id="mRingkasan">—</div>
+
+    <button class="modal-close" onclick="closeModalBtn()">Tutup</button>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ===== CONFIG =====
+const GAS_URL    = 'https://script.google.com/macros/s/AKfycbxGFDYA6YuRtcQ3jB-sdl5gj1s5iptC8txNDZT8mZ-pnR6Mvz7VOZkX7VruIZ8ZShJS/exec';
+const CLIENT_ID  = '263087807773-rmq9r04itbu5tts0s782t2cnp71kbo81.apps.googleusercontent.com';
+// Whitelist email — hanya email ini yang boleh masuk
+const ALLOWED_EMAILS = []; // Kosongkan = semua Google account bisa masuk. Isi email kamu untuk restrict.
+
+// ===== STATE =====
+let allData      = [];
+let filterActive = 'all';
+let currentUser  = null;
+let moonData     = null;
+
+// ===== GOOGLE AUTH =====
+function signInWithGoogle() {
+  google.accounts.id.initialize({
+    client_id: CLIENT_ID,
+    callback:  handleCredential,
+    auto_select: false
+  });
+  google.accounts.id.prompt();
+}
+
+function handleCredential(response) {
+  const payload = parseJwt(response.credential);
+  if (ALLOWED_EMAILS.length > 0 && !ALLOWED_EMAILS.includes(payload.email)) {
+    showToast('❌ Akses ditolak — email tidak terdaftar');
+    return;
+  }
+  currentUser = payload;
+  document.getElementById('userAvatar').src = payload.picture || '';
+  document.getElementById('loginScreen').style.display = 'none';
+  document.getElementById('mainApp').style.display = 'block';
+  loadData();
+}
+
+function parseJwt(token) {
+  const base64 = token.split('.')[1].replace(/-/g,'+').replace(/_/g,'/');
+  return JSON.parse(atob(base64));
+}
+
+function signOut() {
+  if (!confirm('Keluar dari Astronacci Radar?')) return;
+  currentUser = null;
+  document.getElementById('loginScreen').style.display = 'flex';
+  document.getElementById('mainApp').style.display = 'none';
+  google.accounts.id.disableAutoSelect();
+}
+
+// ===== DATA =====
+async function loadData() {
+  const btn = document.getElementById('btnRefresh');
+  btn.disabled = true;
+  btn.textContent = '↻ Loading...';
+
+  document.getElementById('kandidatList').innerHTML = `
+    <div class="loading-wrap">
+      <div class="spinner"></div>
+      <div class="loading-text">Mengambil data dari Astronacci Tracker...</div>
+    </div>`;
+
+  try {
+    const res  = await fetch(GAS_URL);
+    const json = await res.json();
+
+    if (json.status !== 'ok') throw new Error(json.pesan);
+
+    allData  = json.data || [];
+    moonData = json.faseBulan || null;
+
+    updateMoonBanner();
+    updateStats();
+    renderKandidat(filterActive);
+    showToast('✅ Data berhasil dimuat — ' + allData.length + ' kandidat');
+
+  } catch(e) {
+    document.getElementById('kandidatList').innerHTML = `
+      <div class="empty-state">
+        <div class="empty-icon">⚠️</div>
+        <div class="empty-title">Gagal memuat data</div>
+        <div class="empty-desc">${e.message}<br>Coba refresh atau jalankan scan di GAS.</div>
+      </div>`;
+    showToast('❌ Error: ' + e.message);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '↻ Refresh';
+  }
+}
+
+// ===== MOON BANNER =====
+function updateMoonBanner() {
+  if (!moonData) return;
+  document.getElementById('moonIcon').textContent  = moonData.icon  || '🌙';
+  document.getElementById('moonFase').textContent  = moonData.fase  || '—';
+  document.getElementById('moonDesc').textContent  = moonData.deskripsi || '—';
+
+  const w   = moonData.windowTiming || 'WATCH';
+  const el  = document.getElementById('moonWindow');
+  el.textContent = w;
+  el.className   = 'moon-window ' +
+    (w === 'ENTRY' ? 'window-entry' : w === 'WAIT' ? 'window-wait' : 'window-watch');
+}
+
+// ===== STATS =====
+function updateStats() {
+  const prime   = allData.filter(d => d.label === 'PRIME').length;
+  const konfirm = allData.filter(d => d.label === 'KONFIRMASI').length;
+  const tgl     = allData.length > 0 ? allData[0].tanggal : '—';
+
+  document.getElementById('statPrime').textContent   = prime;
+  document.getElementById('statKonfirm').textContent = konfirm;
+  document.getElementById('statTotal').textContent   = allData.length;
+  document.getElementById('statTanggal').textContent = tgl || '—';
+}
+
+// ===== RENDER KANDIDAT =====
+function filterData(type, el) {
+  filterActive = type;
+  document.querySelectorAll('.pill').forEach(p => {
+    p.className = 'pill';
+  });
+  el.classList.add(type === 'all' ? 'active-all' : type === 'PRIME' ? 'active-prime' : 'active-konfirm');
+  renderKandidat(type);
+}
+
+function renderKandidat(filter) {
+  const data = filter === 'all' ? allData : allData.filter(d => d.label === filter);
+  const list = document.getElementById('kandidatList');
+
+  if (data.length === 0) {
+    list.innerHTML = `
+      <div class="empty-state">
+        <div class="empty-icon">🌙</div>
+        <div class="empty-title">Belum ada kandidat</div>
+        <div class="empty-desc">Jalankan scan di GAS atau tunggu New Moon untuk window ENTRY yang lebih kuat.</div>
+      </div>`;
+    return;
+  }
+
+  list.innerHTML = '<div class="kandidat-list">' +
+    data.map((d, i) => `
+      <div class="kandidat-card ${d.label === 'PRIME' ? 'prime' : 'konfirm'}"
+           onclick="showDetail(${i})">
+        <div class="card-top">
+          <div>
+            <div class="card-ticker">${d.ticker}</div>
+            <div class="card-sheet">${d.sheet || '—'}</div>
+          </div>
+          <div class="card-badge ${d.label === 'PRIME' ? 'badge-prime' : 'badge-konfirm'}">
+            ${d.label === 'PRIME' ? '⭐ PRIME' : '✓ KONFIRMASI'}
+          </div>
+        </div>
+        <div class="card-metrics">
+          <div class="metric">
+            <div class="metric-label">Harga</div>
+            <div class="metric-value highlight">${fmt(d.harga)}</div>
+          </div>
+          <div class="metric">
+            <div class="metric-label">Fib Level</div>
+            <div class="metric-value">${d.fibLevel || '—'}</div>
+          </div>
+          <div class="metric">
+            <div class="metric-label">Jarak</div>
+            <div class="metric-value">${d.jarak ? d.jarak + '%' : '—'}</div>
+          </div>
+        </div>
+        <div class="card-bottom">
+          <div class="score-bar-wrap">
+            <div class="score-bar-track">
+              <div class="score-bar-fill" style="width:${(d.skor/10*100)}%"></div>
+            </div>
+            <div class="score-text">${d.skor}/10 · ${d.zona || '—'} · ${d.kekuatan || '—'}</div>
+          </div>
+          <div class="fib-tag">${d.fibLevel || '—'}</div>
+        </div>
+      </div>`
+    ).join('') + '</div>';
+
+  // Bind detail dengan data yang sudah difilter
+  window._displayedData = data;
+}
+
+function fmt(val) {
+  if (!val || val === '-') return '—';
+  const n = parseFloat(val);
+  if (isNaN(n)) return val;
+  return n.toLocaleString('id-ID');
+}
+
+// ===== DETAIL MODAL =====
+function showDetail(idx) {
+  const d = (window._displayedData || allData)[idx];
+  if (!d) return;
+
+  document.getElementById('modalTicker').textContent    = d.ticker;
+  document.getElementById('modalSheetName').textContent = d.sheet || '—';
+  document.getElementById('mHarga').textContent         = fmt(d.harga);
+  document.getElementById('mSkor').textContent          = (d.skor || '—') + '/10 → ' + d.label;
+  document.getElementById('mFibLevel').textContent      = d.fibLevel || '—';
+  document.getElementById('mHargaLevel').textContent    = fmt(d.hargaLevel);
+  document.getElementById('mJarak').textContent         = d.jarak ? d.jarak + '%' : '—';
+  document.getElementById('mZona').textContent          = d.zona || '—';
+  document.getElementById('mSwingHigh').textContent     = fmt(d.swingHigh);
+  document.getElementById('mSwingLow').textContent      = fmt(d.swingLow);
+  document.getElementById('mFaseBulan').textContent     = (d.faseBulan || '—') + ' · Window: ' + (d.window || '—');
+  document.getElementById('mRingkasan').textContent     =
+    'Level Fibonacci ' + (d.fibLevel || '—') + ' di harga ' + fmt(d.hargaLevel) +
+    ', jarak ' + (d.jarak || '—') + '% dari harga saat ini. ' +
+    'Zona: ' + (d.zona || '—') + ' · Kekuatan: ' + (d.kekuatan || '—') + '. ' +
+    'Fase bulan ' + (d.faseBulan || '—') + ' dengan window timing ' + (d.window || '—') + '.';
+
+  document.getElementById('modalOverlay').classList.add('show');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeModal(e) {
+  if (e.target === document.getElementById('modalOverlay')) closeModalBtn();
+}
+
+function closeModalBtn() {
+  document.getElementById('modalOverlay').classList.remove('show');
+  document.body.style.overflow = '';
+}
+
+// ===== TOAST =====
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+// ===== INIT =====
+window.onload = function() {
+  google.accounts.id.initialize({
+    client_id: CLIENT_ID,
+    callback:  handleCredential,
+    auto_select: true
+  });
+  google.accounts.id.prompt();
+};
+</script>
+</body>
+</html>
