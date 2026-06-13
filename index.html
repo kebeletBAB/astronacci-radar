@@ -915,8 +915,15 @@ function formatTanggal(raw) {
   // Sudah format DD-Mon-YYYY (dari library GAS) → pakai langsung
   if (/^\d{1,2}-[A-Za-z]{3}-\d{4}$/.test(String(raw))) return raw;
 
-  // Format ISO YYYY-MM-DD → konversi
-  const isoMatch = String(raw).match(/^(\d{4})-(\d{2})-(\d{2})/);
+  // ISO dengan timestamp: "2026-06-11T17:00:00.000Z" (Google Sheets Date → JSON)
+  // Pakai UTC agar tidak kena offset timezone browser
+  if (/^\d{4}-\d{2}-\d{2}T/.test(String(raw))) {
+    const d = new Date(raw);
+    return d.getUTCDate() + '-' + NAMA_BULAN_ID[d.getUTCMonth()] + '-' + d.getUTCFullYear();
+  }
+
+  // Format ISO YYYY-MM-DD (tanpa waktu) → konversi
+  const isoMatch = String(raw).match(/^(\d{4})-(\d{2})-(\d{2})$/);
   if (isoMatch) {
     const [, y, m, d] = isoMatch;
     return parseInt(d) + '-' + NAMA_BULAN_ID[parseInt(m) - 1] + '-' + y;
