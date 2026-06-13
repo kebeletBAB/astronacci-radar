@@ -904,6 +904,65 @@ function updateMoonBanner() {
     (w === 'ENTRY' ? 'window-entry' : w === 'WAIT' ? 'window-wait' : 'window-watch');
 }
 
+// ===== A1: FORMAT TANGGAL =====
+// Normalisasi berbagai format ke DD-Mon-YYYY
+// Menerima: "13-Jun-2026", "2026-06-13", "6/13/2026", Date object, dll
+const NAMA_BULAN_ID = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
+
+function formatTanggal(raw) {
+  if (!raw || raw === '-' || raw === '—') return '—';
+
+  // Sudah format DD-Mon-YYYY (dari library GAS) → pakai langsung
+  if (/^\d{1,2}-[A-Za-z]{3}-\d{4}$/.test(String(raw))) return raw;
+
+  // Format ISO YYYY-MM-DD → konversi
+  const isoMatch = String(raw).match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (isoMatch) {
+    const [, y, m, d] = isoMatch;
+    return parseInt(d) + '-' + NAMA_BULAN_ID[parseInt(m) - 1] + '-' + y;
+  }
+
+  // Format MM/DD/YYYY atau DD/MM/YYYY (Google Sheets serial → Date)
+  if (raw instanceof Date || (typeof raw === 'number' && raw > 40000)) {
+    // Google Sheets serial date → JS Date
+    const d = raw instanceof Date ? raw : new Date((raw - 25569) * 86400 * 1000);
+    return d.getUTCDate() + '-' + NAMA_BULAN_ID[d.getUTCMonth()] + '-' + d.getUTCFullYear();
+  }
+
+  // Format M/D/YYYY (e.g. "6/13/2026")
+  const usMatch = String(raw).match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+  if (usMatch) {
+    const [, m, d, y] = usMatch;
+    return parseInt(d) + '-' + NAMA_BULAN_ID[parseInt(m) - 1] + '-' + y;
+  }
+
+  return String(raw); // fallback — pakai apa adanya
+}
+
+// ===== A2: FORMAT FIB LEVEL =====
+// Normalisasi berbagai format ke label yang benar
+// GAS bisa kirim: "50.0%", "38.2%", "0.5", "0.382", "50.0% Ext", dll
+function formatFibLevel(raw) {
+  if (!raw || raw === '-' || raw === '—') return '—';
+  const s = String(raw).trim();
+
+  // Sudah format benar: "38.2%", "50.0%", "61.8% Ext", dll → pakai langsung
+  if (/^\d+(\.\d+)?%/.test(s)) return s;
+
+  // Desimal kecil (0–1): e.g. 0.382 → "38.2%", 0.5 → "50.0%"
+  const n = parseFloat(s);
+  if (!isNaN(n) && n > 0 && n <= 1) {
+    return (n * 100).toFixed(1) + '%';
+  }
+
+  // Angka sudah dalam persen tapi tanpa simbol: e.g. 38.2 → "38.2%"
+  if (!isNaN(n) && n > 1 && n <= 262) {
+    return n.toFixed(1) + '%';
+  }
+
+  return s; // fallback
+}
+
 // ===== STATS =====
 function updateStats() {
   const prime   = allData.filter(d => d.label === 'PRIME').length;
@@ -913,7 +972,7 @@ function updateStats() {
   document.getElementById('statPrime').textContent   = prime;
   document.getElementById('statKonfirm').textContent = konfirm;
   document.getElementById('statTotal').textContent   = allData.length;
-  document.getElementById('statTanggal').textContent = tgl || '—';
+  document.getElementById('statTanggal').textContent = formatTanggal(tgl);
 }
 
 // ===== RENDER KANDIDAT =====
@@ -960,7 +1019,7 @@ function renderKandidat(filter) {
           </div>
           <div class="metric">
             <div class="metric-label">Fib Level</div>
-            <div class="metric-value">${d.fibLevel || '—'}</div>
+            <div class="metric-value">${formatFibLevel(d.fibLevel)}</div>
           </div>
           <div class="metric">
             <div class="metric-label">Jarak</div>
@@ -974,7 +1033,7 @@ function renderKandidat(filter) {
             </div>
             <div class="score-text">${d.skor}/10 · ${d.zona || '—'} · ${d.kekuatan || '—'}</div>
           </div>
-          <div class="fib-tag">${d.fibLevel || '—'}</div>
+          <div class="fib-tag">${formatFibLevel(d.fibLevel)}</div>
         </div>
       </div>`
     ).join('') + '</div>';
@@ -999,7 +1058,7 @@ function showDetail(idx) {
   document.getElementById('modalSheetName').textContent = d.sheet || '—';
   document.getElementById('mHarga').textContent         = fmt(d.harga);
   document.getElementById('mSkor').textContent          = (d.skor || '—') + '/10 → ' + d.label;
-  document.getElementById('mFibLevel').textContent      = d.fibLevel || '—';
+  document.getElementById('mFibLevel').textContent      = formatFibLevel(d.fibLevel);
   document.getElementById('mHargaLevel').textContent    = fmt(d.hargaLevel);
   document.getElementById('mJarak').textContent         = d.jarak ? d.jarak + '%' : '—';
   document.getElementById('mZona').textContent          = d.zona || '—';
@@ -1007,7 +1066,7 @@ function showDetail(idx) {
   document.getElementById('mSwingLow').textContent      = fmt(d.swingLow);
   document.getElementById('mFaseBulan').textContent     = (d.faseBulan || '—') + ' · Window: ' + (d.window || '—');
   document.getElementById('mRingkasan').textContent     =
-    'Level Fibonacci ' + (d.fibLevel || '—') + ' di harga ' + fmt(d.hargaLevel) +
+    'Level Fibonacci ' + formatFibLevel(d.fibLevel) + ' di harga ' + fmt(d.hargaLevel) +
     ', jarak ' + (d.jarak || '—') + '% dari harga saat ini. ' +
     'Zona: ' + (d.zona || '—') + ' · Kekuatan: ' + (d.kekuatan || '—') + '. ' +
     'Fase bulan ' + (d.faseBulan || '—') + ' dengan window timing ' + (d.window || '—') + '.';
